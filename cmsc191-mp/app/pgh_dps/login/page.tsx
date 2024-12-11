@@ -4,6 +4,7 @@ export default function Home() {
     <>
       <div className="grid grid-cols-1 h-screen flex items-center justify-items-center">
 
+      <h1 className="flex text-center text-5xl font-extrabold">Digital Prescription System</h1>
 
         <div className="w-full max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8">
           <form className="space-y-6" action="#">
@@ -19,7 +20,7 @@ export default function Home() {
                     <path d="M11.241 9.817c-.36.275-.801.425-1.255.427-.428 0-.845-.138-1.187-.395L0 2.6V14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2.5l-8.759 7.317Z" />
                   </svg>
                 </div>
-                <input type="text" name="email" id="email" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="name@pgh.com" />
+                <input type="text" name="email" id="email" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5" placeholder="name@pgh.com" />
               </div>
             </div>
 
@@ -32,7 +33,7 @@ export default function Home() {
             <div className="flex justify-self-start">
               <a href="#" className="ms-auto text-sm text-blue-700 hover:underline">Forgot Password?</a>
             </div>
-            <button type="submit" className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Login</button>
+            <button type="submit" className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Login</button>
             <div className="text-sm font-medium text-gray-500">
               Not registered? <a href="#" className="text-blue-700 hover:underline">Create account</a>
             </div>
