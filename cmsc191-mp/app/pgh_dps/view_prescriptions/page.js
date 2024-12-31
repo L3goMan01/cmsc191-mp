@@ -1,15 +1,153 @@
 "use client"
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { db } from '../../../firebase/firebase';
+import { collection, getDocs } from "firebase/firestore"
 
 export default function Dashboard() {
+    const [data, setData] = useState([]);
+
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const dataSnapshot = await getDocs(collection(db, "prescriptions"))
+                const receivedData = dataSnapshot.docs.map((doc) => {
+                    const fields = doc.data();
+                    // const file_name = fields.file_name;
+                    const date_created = fields.date_created.toDate() ? new Date(fields.date_created.toDate()) : null;
+                    const final_date = date_created.toDateString()
+                    // const generic_name = fields.generic_name;
+                    // const brand_name = fields.brand_name;
+                    console.log(fields.date_created.toDate())
+                    return {
+                        file_name: fields.file_name,
+                        date_created: final_date
+                    }
+                });
+                setData(receivedData)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchData();
         initFlowbite();
-    })
+    }, [])
+
+    function testFunction() {
+        // const modal = FlowbiteInstances.getInstance('Modal', 'editPrescriptionModal');
+        console.log("pressed")
+        // modal.show();
+    }
 
     return (
         <>
+            <div id="editPrescriptionModal" tabIndex={-1} aria-hidden="true" className="fixed top-0 left-0 right-0 z-50 items-center justify-center hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                <div className="relative w-full max-w-6xl max-h-full">
+                    {/* Modal content */}
+                    <form className="relative bg-white rounded-lg shadow">
+                        {/* Modal header */}
+                        <div className="flex items-start justify-between p-4 border-b rounded-t">
+                            <h3 className="text-xl font-semibold text-gray-900">
+                                Prescription
+                            </h3>
+                            <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="editPrescriptionModal">
+                                <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                </svg>
+                                <span className="sr-only">Close modal</span>
+                            </button>
+                        </div>
+
+                        {/* Modal body */}
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="relative">
+                                    <label htmlFor="patient-name" className="block mb-2 text-sm font-medium text-gray-900">Patient Name</label>
+                                    <input type="text" name="patient-name" id="patient-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Jane Doe" required />
+                                </div>
+                                <div className="relative">
+                                    <label htmlFor="prescribed-med" className="block mb-2 text-sm font-medium text-gray-900">Prescribed Medication</label>
+                                    <div className="relative flex items-center max-w-[8rem]">
+                                        <button type="button" id="decrement-button" data-input-counter-decrement="prescribed-med" className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none">
+                                            <svg className="w-3 h-3 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
+                                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h16" />
+                                            </svg>
+                                        </button>
+                                        <input type="text" id="prescribed-med" data-input-counter aria-describedby="helper-text-explanation" className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5" placeholder="0" required />
+                                        <button type="button" id="increment-button" data-input-counter-increment="prescribed-med" className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none">
+                                            <svg className="w-3 h-3 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 1v16M1 9h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-5 gap-6">
+                                <div className="relative">
+                                    <label htmlFor="generic-name" className="block mb-2 text-sm font-medium text-gray-900">Generic Name</label>
+                                    <input type="text" name="generic-name" id="generic-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Generika" required />
+                                </div>
+                                <div className="relative">
+                                    <label htmlFor="brand-name" className="block mb-2 text-sm font-medium text-gray-900">Brand Name</label>
+                                    <input type="text" name="brand-name" id="brand-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Bear Brand" required />
+                                </div>
+                                <div className="relative">
+                                    <label htmlFor="amount" className="block mb-2 text-sm font-medium text-gray-900">Amount</label>
+                                    <input type="number" name="amount" id="amount" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1" required />
+                                </div>
+                                <div className="relative col-span-2">
+                                    <label htmlFor="instructions" className="block mb-2 text-sm font-medium text-gray-900">Instructions</label>
+                                    <input type="text" name="instructions" id="instructions" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
+                                </div>
+                                <div className="relative col-span-5">
+                                    <label htmlFor="notes" className="block mb-2 text-sm font-medium text-gray-900">Notes</label>
+                                    <textarea name="notes" id="notes" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" wrap="hard" rows={5} cols={10} placeholder="Waga waga" required />
+                                </div>
+
+                            </div>
+
+
+
+                        </div>
+                        {/* Modal footer */}
+                        <div className="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b">
+                            <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="viewFileModal" tabIndex={-1} aria-hidden="true" className="fixed top-0 left-0 right-0 z-50 items-center justify-center hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                <div className="relative w-full max-w-2xl max-h-full">
+                    {/* Modal content */}
+                    <form className="relative bg-white rounded-lg shadow">
+                        {/* Modal header */}
+                        <div className="flex items-start justify-between p-4 border-b rounded-t">
+                            <h3 className="text-xl font-semibold text-gray-900">
+                                Prescription File
+                            </h3>
+                            <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="viewFileModal">
+                                <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                </svg>
+                                <span className="sr-only">Close modal</span>
+                            </button>
+                        </div>
+
+                        {/* Modal body */}
+                        <div className="p-6 space-y-6">
+
+                        </div>
+                        {/* Modal footer */}
+                        <div className="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b">
+                            <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save all</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" className="inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200">
                 {/* <span className="sr-only">Open sidebar</span> */}
                 <svg className="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -89,7 +227,7 @@ export default function Dashboard() {
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                 <tr>
                                     <th scope="col" className="px-6 py-3">
-                                        Patient Name
+                                        File Name
                                     </th>
                                     <th scope="col" className="px-6 py-3">
                                         <div className="flex items-center justify-center">
@@ -108,7 +246,23 @@ export default function Dashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="bg-white border-b">
+                                {data.map((item, index) => (
+                                    <tr key={index} className="bg-white border-b">
+                                        <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                            {item.file_name}
+                                        </th>
+                                        <td className="px-6 py-4">
+                                            {item.date_created}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <a href="#" type="button" className="mr-6 font-medium text-blue-600 hover:underline" data-modal-target="editPrescriptionModal" data-modal-show="editPrescriptionModal">Edit</a>
+                                            <a href="/pgh_dps/patient_details" type="button" className="mx-6 font-medium text-blue-600 hover:underline">View patient</a>
+                                            <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline" data-modal-target="viewFileModal" data-modal-show="viewFileModal">View file</a>
+                                            <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline">Print</a>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {/* <tr className="bg-white border-b">
                                     <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                         TAN, Timothy
                                     </th>
@@ -149,115 +303,13 @@ export default function Dashboard() {
                                         <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline" data-modal-show="viewFileModal" data-modal-target="viewFileModal">View file</a>
                                         <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline">Print</a>
                                     </td>
-                                </tr>
+                                </tr> */}
                             </tbody>
                         </table>
 
-                        <div id="editPrescriptionModal" tabIndex={-1} aria-hidden="true" className="fixed top-0 left-0 right-0 z-50 items-center justify-center hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
-                            <div className="relative w-full max-w-6xl max-h-full">
-                                {/* Modal content */}
-                                <form className="relative bg-white rounded-lg shadow">
-                                    {/* Modal header */}
-                                    <div className="flex items-start justify-between p-4 border-b rounded-t">
-                                        <h3 className="text-xl font-semibold text-gray-900">
-                                            Prescription
-                                        </h3>
-                                        <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="editPrescriptionModal">
-                                            <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                                            </svg>
-                                            <span className="sr-only">Close modal</span>
-                                        </button>
-                                    </div>
+                        
 
-                                    {/* Modal body */}
-                                    <div className="p-6 space-y-6">
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div className="relative">
-                                                <label htmlFor="patient-name" className="block mb-2 text-sm font-medium text-gray-900">Patient Name</label>
-                                                <input type="text" name="patient-name" id="patient-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Jane Doe" required />
-                                            </div>
-                                            <div className="relative">
-                                                <label htmlFor="prescribed-med" className="block mb-2 text-sm font-medium text-gray-900">Prescribed Medication</label>
-                                                <div className="relative flex items-center max-w-[8rem]">
-                                                    <button type="button" id="decrement-button" data-input-counter-decrement="prescribed-med" className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none">
-                                                        <svg className="w-3 h-3 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
-                                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h16" />
-                                                        </svg>
-                                                    </button>
-                                                    <input type="text" id="prescribed-med" data-input-counter aria-describedby="helper-text-explanation" className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5" placeholder="0" required />
-                                                    <button type="button" id="increment-button" data-input-counter-increment="prescribed-med" className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none">
-                                                        <svg className="w-3 h-3 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
-                                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 1v16M1 9h16" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-5 gap-6">
-                                            <div className="relative">
-                                                <label htmlFor="generic-name" className="block mb-2 text-sm font-medium text-gray-900">Generic Name</label>
-                                                <input type="text" name="generic-name" id="generic-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Generika" required />
-                                            </div>
-                                            <div className="relative">
-                                                <label htmlFor="brand-name" className="block mb-2 text-sm font-medium text-gray-900">Brand Name</label>
-                                                <input type="text" name="brand-name" id="brand-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Bear Brand" required />
-                                            </div>
-                                            <div className="relative">
-                                                <label htmlFor="amount" className="block mb-2 text-sm font-medium text-gray-900">Amount</label>
-                                                <input type="number" name="amount" id="amount" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1" required />
-                                            </div>
-                                            <div className="relative col-span-2">
-                                                <label htmlFor="instructions" className="block mb-2 text-sm font-medium text-gray-900">Instructions</label>
-                                                <input type="text" name="instructions" id="instructions" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
-                                            </div>
-                                            <div className="relative col-span-5">
-                                                <label htmlFor="notes" className="block mb-2 text-sm font-medium text-gray-900">Notes</label>
-                                                <textarea name="notes" id="notes" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" wrap="hard" rows={5} cols={10} placeholder="Waga waga" required />
-                                            </div>
-
-                                        </div>
-
-
-
-                                    </div>
-                                    {/* Modal footer */}
-                                    <div className="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b">
-                                        <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save changes</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div id="viewFileModal" tabIndex={-1} aria-hidden="true" className="fixed top-0 left-0 right-0 z-50 items-center justify-center hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
-                            <div className="relative w-full max-w-2xl max-h-full">
-                                {/* Modal content */}
-                                <form className="relative bg-white rounded-lg shadow">
-                                    {/* Modal header */}
-                                    <div className="flex items-start justify-between p-4 border-b rounded-t">
-                                        <h3 className="text-xl font-semibold text-gray-900">
-                                            Prescription File
-                                        </h3>
-                                        <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="viewFileModal">
-                                            <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                                            </svg>
-                                            <span className="sr-only">Close modal</span>
-                                        </button>
-                                    </div>
-
-                                    {/* Modal body */}
-                                    <div className="p-6 space-y-6">
-
-                                    </div>
-                                    {/* Modal footer */}
-                                    <div className="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b">
-                                        <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save all</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+                        
                     </div>
 
 

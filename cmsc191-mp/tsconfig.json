@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "firebase/firebase.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "firebase/firebase.js", "app/pgh_dps/view_patients/page.js", "app/pgh_dps/patient_details/page.js", "app/pgh_dps/new_prescription/page.js", "app/pgh_dps/login/page.js", "app/pgh_dps/view_prescriptions/page.js"],
   "exclude": ["node_modules"]
 }

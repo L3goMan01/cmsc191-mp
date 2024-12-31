@@ -14,13 +14,19 @@ const firebaseConfig = {
   appId: "1:78752911119:web:a807ebccfd91735ce9b87a"
 };
 
-let app;
-let db;
+// let app;
+// let db;
 
-if (typeof window !== "undefined") {
-  app = initializeApp(firebaseConfig);
-  db = getFirestore(app); // Single db instance
-}
+// if (typeof window !== "undefined") {
+//   app = initializeApp(firebaseConfig);
+//   db = getFirestore(app); // Single db instance
+// }
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app);
 
 export { app, db }; // Export the Firestore instance only if defined
 // const app = initializeApp(firebaseConfig);
