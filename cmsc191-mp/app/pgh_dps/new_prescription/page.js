@@ -1,12 +1,80 @@
 "use client"
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import SearchableDropdown from '../../../components/SearchableDropdown'
+import { db } from '../../../firebase/firebase';
+import { collection, getDocs } from "firebase/firestore"
 
 export default function NewPrescription() {
+    const {register, handleSubmit, setValue, watch, getValues} = useForm();
+    const [patients, setPatients] = useState([])
+    const [medCount, setMedCount] = useState(1)
+    const [patientName, setPatientName] = useState("")
+    const testnames = [{id: 1, name: "Timothy Tan"}, {id: 2, name: "Faustine Rivera"}]
+    const medItem = [
+        {
+            id: 1,
+            gen_value: "",
+            brn_value: "",
+            amt_value: "",
+            ins_value: ""
+        }
+    ]
+    const [medsArr, setMedsArr] = useState(medItem)
+
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const dataSnapshot = await getDocs(collection(db, "patients"))
+                const receivedData = dataSnapshot.docs.map((doc) => {
+                    const fields = doc.data();
+                    const full_name = fields.first_name.concat(" ", fields.middle_name, " ", fields.last_name);
+                    return {
+                        id: doc.id,
+                        name: full_name
+                    }
+                });
+                setPatients(receivedData)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchData();
         initFlowbite();
-    })
+    }, [])
+
+    function handleMedChange(setting) {
+        if (setting == 0 && medCount > 1) {
+            setMedCount(medCount-1)
+            medsArr.pop()
+        }
+        if (setting == 1) {
+            setMedCount(medCount+1)
+            var lastId = medsArr[medsArr.length-1].id + 1
+            var tempItem = {
+                id: lastId, 
+                gen_value: "",
+                brn_value: "",
+                amt_value: "",
+                ins_value: ""
+            }
+            setMedsArr([...medsArr, tempItem])
+        }
+        // console.log(medsArr)
+    }
+
+    function handleNameChange(val) {
+        setPatientName(val)
+        setValue("patient_name", val)
+        console.log(patients)
+        console.log(val)
+    }
+
+    function submitButton() {
+        console.log(getValues())
+    }
 
     return (
         <>
@@ -88,18 +156,22 @@ export default function NewPrescription() {
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="relative">
                                                 <label htmlFor="patient-name" className="block mb-2 text-sm font-medium text-gray-900">Patient Name</label>
-                                                <input type="text" name="patient-name" id="patient-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Jane Doe" required />
+                                                {/* <input type="text" name="patient-name" id="patient-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Jane Doe" required /> */}
+                                                <SearchableDropdown {...register("patient_name")} options={patients} label="name" id="id" selectedVal={patientName} handleChange={(val) => handleNameChange(val)} placeholder="Patient name..." />
                                             </div>
                                             <div className="relative">
                                                 <label htmlFor="prescribed-med" className="block mb-2 text-sm font-medium text-gray-900">Prescribed Medication</label>
                                                 <div className="relative flex items-center max-w-[8rem]">
-                                                    <button type="button" id="decrement-button" data-input-counter-decrement="prescribed-med" className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none">
+                                                    <button type="button" id="decrement-button" onClick={() => handleMedChange(0)} className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none">
                                                         <svg className="w-3 h-3 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
                                                             <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h16" />
                                                         </svg>
                                                     </button>
-                                                    <input type="text" id="prescribed-med" data-input-counter aria-describedby="helper-text-explanation" className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5" placeholder="0" required />
-                                                    <button type="button" id="increment-button" data-input-counter-increment="prescribed-med" className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none">
+                                                    {/* <input type="text" id="prescribed-med" data-input-counter aria-describedby="helper-text-explanation" className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5" onChange={(e) => {setMedCount(e)}} value={medCount} /> */}
+                                                    <div className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5">
+                                                        {medCount}
+                                                    </div>
+                                                    <button type="button" id="increment-button" onClick={() => handleMedChange(1)} className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none">
                                                         <svg className="w-3 h-3 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
                                                             <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 1v16M1 9h16" />
                                                         </svg>
@@ -108,34 +180,45 @@ export default function NewPrescription() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-5 gap-6">
-                                            <div className="relative">
-                                                <label htmlFor="generic-name" className="block mb-2 text-sm font-medium text-gray-900">Generic Name</label>
-                                                <input type="text" name="generic-name" id="generic-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Generika" required />
-                                            </div>
-                                            <div className="relative">
-                                                <label htmlFor="brand-name" className="block mb-2 text-sm font-medium text-gray-900">Brand Name</label>
-                                                <input type="text" name="brand-name" id="brand-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Bear Brand" required />
-                                            </div>
-                                            <div className="relative">
-                                                <label htmlFor="amount" className="block mb-2 text-sm font-medium text-gray-900">Amount</label>
-                                                <input type="number" name="amount" id="amount" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1" required />
-                                            </div>
-                                            <div className="relative col-span-2">
-                                                <label htmlFor="instructions" className="block mb-2 text-sm font-medium text-gray-900">Instructions</label>
-                                                <input type="text" name="instructions" id="instructions" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
-                                            </div>
+                                        <div className="grid grid-cols-5 gap-6" key={"change"}>
+                                            {medsArr.map((item, i) => {
+                                                return(
+                                                    <>
+                                                        <div className="relative" key={"gen-"+i}>
+                                                            <label key={"generic-name-label-"+i} htmlFor={"generic-name-"+i} className="block mb-2 text-sm font-medium text-gray-900">Generic Name</label>
+                                                            <input {...register("generic-name", {required: true})} key={"generic-name-"+i} type="text" name="generic-name" id={"generic-name-"+i} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Generika" required />
+                                                        </div>
+                                                        <div className="relative" key={"brn-"+i}>
+                                                            <label key={"brand-name-label-"+i} htmlFor={"brand-name-"+i} className="block mb-2 text-sm font-medium text-gray-900">Brand Name</label>
+                                                            <input {...register("brand-name", {required: true})} key={"brand-name-"+i} type="text" name="brand-name" id={"brand-name-"+i} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Bear Brand" required />
+                                                        </div>
+                                                        <div className="relative" key={"amt-"+i}>
+                                                            <label key={"amount-label-"+i} htmlFor={"amount-"+i} className="block mb-2 text-sm font-medium text-gray-900">Amount</label>
+                                                            <input {...register("amount", {required: true})} key={"amount-"+i} type="number" name="amount" id={"amount-"+i} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1" required />
+                                                        </div>
+                                                        <div className="relative col-span-2" key={"ins-"+i}>
+                                                            <label key={"instructions-label-"+i} htmlFor={"instructions-"+i} className="block mb-2 text-sm font-medium text-gray-900">Instructions</label>
+                                                            <input {...register("instructions", {required: true})} key={"instructions-"+i} type="text" name="instructions" id={"instructions-"+i} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
+                                                        </div>
+                                                    </>
+                                                )
+                                            })
+                                            }
                                             <div className="relative col-span-5">
                                                 <label htmlFor="notes" className="block mb-2 text-sm font-medium text-gray-900">Notes</label>
-                                                <textarea name="notes" id="notes" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" wrap="hard" rows={5} cols={10} placeholder="Waga waga" required />
+                                                <textarea {...register("notes", {required: true})} name="notes" id="notes" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" wrap="hard" rows={5} cols={10} placeholder="Put any notes here..." />
                                             </div>
-
+                                            <div className="relative col-span-5">
+                                                <label htmlFor="file_name" className="block mb-2 text-sm font-medium text-gray-900">File Name</label>
+                                                <input {...register("file_name", {required: true})} type="text" name="file_name" id="file_name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" required />
+                                            </div>
                                         </div>
 
                                     </div>
                                     
                                     <div className="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b">
-                                        <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Create</button>
+                                        {/* <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Create</button> */}
+                                        <button onClick={()=>submitButton()} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Create</button>
                                     </div>
                                 </form>
                             </div>
