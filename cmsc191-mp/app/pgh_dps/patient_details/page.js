@@ -53,8 +53,11 @@ export default function PatientDetails() {
         }
         fetchPatientData()
         fetchPrescriptions()
-        initFlowbite();
     },[])
+
+    useEffect(() => {
+        initFlowbite();
+    })
 
     function clicked() {
         console.log(prescriptions)

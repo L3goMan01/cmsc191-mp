@@ -3,15 +3,20 @@ import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { useState, useEffect } from 'react';
 import { db } from '../../../firebase/firebase';
-import { collection, getDocs, getDoc, doc, query, where } from "firebase/firestore"
+import { collection, getDocs, getDoc, doc, query, where, setDoc } from "firebase/firestore"
 import Link from 'next/link';
+import SearchableDropdown from '@/components/SearchableDropdown';
+import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
+import { Timestamp } from 'firebase/firestore';
 
 export default function ViewPatients() {
+    const {register, handleSubmit, setValue, watch, getValues, control} = useForm()
     const [patientNames, setPatientNames] = useState([]);
-    const [prescriptionCount, setPrescriptionCounts] = useState([])
+    const options = [{id: 1, sex: "Male"},{id: 2, sex: "Female"}]
+    const [sex, setSex] = useState("")
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchPatients = async () => {
             try {
                 const namesSnapshot = await getDocs(collection(db, "patients"))
                 const receivedNames = namesSnapshot.docs.map((doc) => {
@@ -24,17 +29,54 @@ export default function ViewPatients() {
                         name: full_name
                     }
                 });
+                console.log(receivedNames)
                 setPatientNames(receivedNames)
             } catch (error) {
                 console.log(error)
             }
         }
-        fetchData();
-        initFlowbite();
+        fetchPatients();
     },[])
 
+    useEffect(() => {
+        initFlowbite();
+    })
+
     function clicked() {
-        console.log(patientNames)
+        // console.log(getValues())
+        const docData = {
+            first_name: getValues("first_name"),
+            middle_name: getValues("middle_name"),
+            last_name: getValues("last_name"),
+            sex: getValues("sex"),
+            birthday: getValues("birthday")
+        }
+        console.log(docData)
+        console.log((parseInt(patientNames[patientNames.length-1].id)+1).toString())
+    }
+
+    function handleSexChange(val) {
+        setSex(val)
+        setValue("sex", val)
+        console.log(val)
+    }
+
+    function handleDateChange(val) {
+        const myTimestamp = Timestamp.fromDate(new Date(val));
+        setValue("birthday", myTimestamp)
+        console.log(myTimestamp)
+    }
+
+    const onSubmit = async () => {
+        const docData = {
+            first_name: getValues("first_name"),
+            middle_name: getValues("middle_name"),
+            last_name: getValues("last_name"),
+            sex: getValues("sex"),
+            birthday: getValues("birthday")
+        }
+        const newId = (parseInt(patientNames[patientNames.length-1].id)+1).toString()
+        await setDoc(doc(db, "patients", newId), docData)
     }
 
     return (
@@ -141,50 +183,28 @@ export default function ViewPatients() {
                                         </td>
                                     </tr>
                                 ))}
-                                {/* <tr className="bg-white border-b">
-                                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                        TAN, Timothy
-                                    </th>
-                                    <td className="px-6 py-4">
-                                        4
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <Link href={{pathname: '/pgh_dps/patient_details', search: "1"}}>
-                                            <div className="mx-6 font-medium text-blue-600 hover:underline">View patient</div>
-                                        </Link>
-                                    </td>
-                                </tr>
-                                <tr className="bg-white border-b">
-                                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                        RIVERA, Faustine
-                                    </th>
-                                    <td className="px-6 py-4">
-                                        1
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <a href="/pgh_dps/patient_details" type="button" className="mx-6 font-medium text-blue-600 hover:underline">View patient</a>
-                                    </td>
-                                </tr>
-                                <tr className="bg-white">
-                                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                        TAN, Iris
-                                    </th>
-                                    <td className="px-6 py-4">
-                                        2
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <a href="/pgh_dps/patient_details" type="button" className="mx-6 font-medium text-blue-600 hover:underline">View patient</a>
-                                    </td>
-                                </tr> */}
                             </tbody>
                         </table>
 
                     </div>
+                </div>
 
+                <div>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <input {...register("first_name", {required:true})} placeholder='first-name'></input>
+                        <input {...register("middle_name", {required:true})} placeholder='middle-name'></input>
+                        <input {...register("last_name", {required:true})} placeholder='last-name'></input>
+                        {/* <SearchableDropdown {...register("sex", {required:true})} options={options} label="sex" id="id" selectedVal={sex} handleChange={(val) => handleSexChange(val)}/> */}
+                        <select {...register("sex")} name="sex" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" required>
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                        <input {...register("birthday_name", {required:true})} type='date' placeholder='birthday' onChange={(date)=>handleDateChange(date.target.value)}></input>
+                        <button onClick={()=>onSubmit()}>Try</button>
+                    </form>
                 </div>
             </div>
-
-
         </>
     );
 }

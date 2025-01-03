@@ -31,8 +31,11 @@ export default function ViewPrescriptions() {
             }
         }
         fetchData();
-        initFlowbite();
     }, [])
+
+    useEffect(() => {
+        initFlowbite();
+    })
 
     function testFunction() {
         // const modal = FlowbiteInstances.getInstance('Modal', 'editPrescriptionModal');

@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import SearchableDropdown from '../../../components/SearchableDropdown'
 import { db } from '../../../firebase/firebase';
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, getDoc, doc, query, where, setDoc } from "firebase/firestore"
+import { Timestamp } from 'firebase/firestore';
 
 export default function NewPrescription() {
     const {register, handleSubmit, setValue, watch, getValues, control} = useForm({
@@ -17,21 +18,15 @@ export default function NewPrescription() {
     const [patients, setPatients] = useState([])
     const [medCount, setMedCount] = useState(1)
     const [patientName, setPatientName] = useState("")
-    // const medItem = [
-    //     {
-    //         id: 1,
-    //         gen_value: "",
-    //         brn_value: "",
-    //         amt_value: "",
-    //         ins_value: ""
-    //     }
-    // ]
-    // const [medsArr, setMedsArr] = useState(medItem)
-    const {fields, append, remove} = useFieldArray({
+    const [genericNames, setGenericNames] = useState([])
+    const [brandNames, setBrandNames] = useState([])
+    const [amounts, setAmounts] = useState([])
+    const [instructions, setInstructions] = useState([])
+    const {fields, append, remove, prepend, insert, update} = useFieldArray({
         control,
         name: "meds"
     });
-    const meds = watch("meds")
+    // const meds = watch("meds")
 
     useEffect(() => {
         const fetchData = async () => {
@@ -51,8 +46,11 @@ export default function NewPrescription() {
             }
         }
         fetchData();
-        initFlowbite();
     }, [])
+
+    useEffect(() => {
+        initFlowbite();
+    })
 
     function handleMedChange(setting) {
         if (setting == 0 && medCount > 1) {
@@ -62,7 +60,7 @@ export default function NewPrescription() {
         }
         if (setting == 1) {
             setMedCount(medCount+1)
-            append({generic_name: "", brand_name: "", amount: 0, instructions: ""})
+            append({generic_name: "", brand_name: "", amount: "", instructions: ""})
             // var lastId = medsArr[medsArr.length-1].id + 1
             // var tempItem = {
             //     id: lastId, 
@@ -78,15 +76,44 @@ export default function NewPrescription() {
 
     function handleNameChange(val) {
         setPatientName(val)
-        setValue("patient_name", val)
-        console.log(patients)
-        console.log(val)
+        setValue("patient_id", patients.findIndex(x => x.name==val)+1)
+    }
+
+    function handleFieldChange(field, index, val) {
+        // console.log(field)
+        // setValue(field, val)
+        if (field == "generic") {
+            genericNames[index] = val
+        }
+        if (field == "brand") {
+            brandNames[index] = val
+        }
+        if (field == "amount") {
+            amounts[index] = parseInt(val)
+        }
+        if (field == "instructions") {
+            instructions[index] = val
+        }
+    }
+
+    const onSubmit = async () => {
+            const date_created = Timestamp.fromDate(new Date());
+            const docData = {
+                file_name: getValues("file_name"),
+                date_created: date_created,
+                generic_name: genericNames,
+                brand_name: brandNames,
+                amount: amounts,
+                instructions: instructions,
+                notes: getValues("notes"),
+                patient_id: getValues("patient_id")
+            }
+            const newId = getValues("file_name").replace(/\s/g, "").toLowerCase()
+            await setDoc(doc(db, "prescriptions", newId), docData)
     }
 
     function submitButton() {
-        console.log(getValues())
-        // console.log(meds)
-        // console.log(getValues("meds.generic_name"))
+        console.log(getValues("patient_id"))
     }
 
     return (
@@ -157,7 +184,7 @@ export default function NewPrescription() {
                     <div className="items-center justify-center w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
                             <div className="relative w-full max-w-6xl max-h-full">
                                 
-                                <form className="relative bg-white rounded-lg">
+                                <form onSubmit={handleSubmit(onSubmit)} className="relative bg-white rounded-lg">
                                     
                                     <div className="flex items-start justify-between p-4 border-b rounded-t">
                                         <h4 className="text-2xl font-semibold text-gray-900">
@@ -170,7 +197,7 @@ export default function NewPrescription() {
                                             <div className="relative">
                                                 <label htmlFor="patient-name" className="block mb-2 text-sm font-medium text-gray-900">Patient Name</label>
                                                 {/* <input type="text" name="patient-name" id="patient-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Jane Doe" required /> */}
-                                                <SearchableDropdown {...register("patient_name")} options={patients} label="name" id="id" selectedVal={patientName} handleChange={(val) => handleNameChange(val)} placeholder="Patient name..." />
+                                                <SearchableDropdown {...register("patient_id", {required:true})} options={patients} label="name" id="id" selectedVal={patientName} handleChange={(val) => handleNameChange(val)} placeholder="Patient name..." />
                                             </div>
                                             <div className="relative">
                                                 <label htmlFor="prescribed-med" className="block mb-2 text-sm font-medium text-gray-900">Prescribed Medication</label>
@@ -198,19 +225,19 @@ export default function NewPrescription() {
                                                 <>
                                                     <div className="relative" key={"gen-"+item.id}>
                                                         <label key={"generic-name-label-"+item.id} htmlFor={"generic-name-"+item.id} className="block mb-2 text-sm font-medium text-gray-900">Generic Name</label>
-                                                        <input {...register("meds.generic_name."+index, {required: true})} key={"generic-name-"+item.id} type="text" name="generic-name" id={"generic-name-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Generika" required />
+                                                        <input {...register(`meds.generic_name.${index}`, {required: true})} onChange={(input) => handleFieldChange("generic", index, input.target.value)} key={"generic-name-"+item.id} type="text" name="generic-name" id={"generic-name-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Generika" required />
                                                     </div>
                                                     <div className="relative" key={"brn-"+item.id}>
                                                         <label key={"brand-name-label-"+item.id} htmlFor={"brand-name-"+item.id} className="block mb-2 text-sm font-medium text-gray-900">Brand Name</label>
-                                                        <input {...register(`meds.brand_name.${index}`, {required: true})} key={"brand-name-"+item.id} type="text" name="brand-name" id={"brand-name-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Bear Brand" required />
+                                                        <input {...register(`meds.brand_name.${index}`, {required: true})} onChange={(input) => handleFieldChange("brand", index, input.target.value)} key={"brand-name-"+item.id} type="text" name="brand-name" id={"brand-name-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Bear Brand" required />
                                                     </div>
                                                     <div className="relative" key={"amt-"+item.id}>
                                                         <label key={"amount-label-"+item.id} htmlFor={"amount-"+item.id} className="block mb-2 text-sm font-medium text-gray-900">Amount</label>
-                                                        <input {...register(`meds.amount.${index}`, {required: true})} key={"amount-"+item.id} type="number" name="amount" id={"amount-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1" required />
+                                                        <input {...register(`meds.amount.${index}`, {required: true})} onChange={(input) => handleFieldChange("amount", index, input.target.value)} key={"amount-"+item.id} type="text" name="amount" id={"amount-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1 pill" required />
                                                     </div>
                                                     <div className="relative col-span-2" key={"ins-"+item.id}>
                                                         <label key={"instructions-label-"+item.id} htmlFor={"instructions-"+index} className="block mb-2 text-sm font-medium text-gray-900">Instructions</label>
-                                                        <input {...register(`meds.instructions.${index}`, {required: true})} key={"instructions-"+item.id} type="text" name="instructions" id={"instructions-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
+                                                        <input {...register(`meds.instructions.${index}`, {required: true})} onChange={(input) => handleFieldChange("instructions", index, input.target.value)} key={"instructions-"+item.id} type="text" name="instructions" id={"instructions-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
                                                     </div>
                                                 </>
                                             ))}
