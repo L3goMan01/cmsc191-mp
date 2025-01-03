@@ -143,7 +143,7 @@ export default function ViewPatients() {
 
                     <p className="mt-1 text-sm font-normal text-gray-500 mb-10">This table displays the number of prescriptions you have made so far for each of your patient.</p>
 
-                    <div className="pb-4 bg-white">
+                    <div className="pb-4 bg-white grid grid-cols-2">
                         <label htmlFor="table-search" className="sr-only">Search</label>
                         <div className="relative mt-1">
                             <div className="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
@@ -153,7 +153,74 @@ export default function ViewPatients() {
                             </div>
                             <input type="text" id="table-search" className="block pt-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="Search for a patient" />
                         </div>
+                        <div className="text-right">
+                            <button className="bg-blue-700 text-white text-2xl hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg px-3 py-1.5 text-center inline-flex items-center me-2" data-modal-show="addPatientModal" data-modal-target="addPatientModal">
+                                <svg className="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path fillRule="evenodd" d="M9 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H7Zm8-1a1 1 0 0 1 1-1h1v-1a1 1 0 1 1 2 0v1h1a1 1 0 1 1 0 2h-1v1a1 1 0 1 1-2 0v-1h-1a1 1 0 0 1-1-1Z" clipRule="evenodd"/>
+                                </svg>
+
+                                Add patient
+                            </button>
+                        </div>
                     </div>
+
+                    <div id="addPatientModal" tabIndex={-1} aria-hidden="true" className="fixed top-0 left-0 right-0 z-50 items-center justify-center hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                            <div className="relative w-full max-w-2xl max-h-full">
+                                {/* Modal content */}
+                                <form className="relative bg-white rounded-lg shadow">
+                                    {/* Modal header */}
+                                    <div className="flex items-start justify-between p-4 border-b rounded-t">
+                                        <h3 className="text-xl font-semibold text-gray-900">
+                                            Add Patient
+                                        </h3>
+                                        <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="addPatientModal">
+                                            <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                            </svg>
+                                            <span className="sr-only">Close modal</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Modal body */}
+                                    <div className="p-6 space-y-6">
+                                        <div className="grid grid-cols-3 gap-6">
+                                            <div className="relative">
+                                                <label htmlFor="first-name" className="block mb-2 text-sm font-medium text-gray-900">First Name</label>
+                                                <input type="text" name="first-name" id="first-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Jane Doe' required />
+                                            </div>
+                                            <div className="relative">
+                                                <label htmlFor="middle-name" className="block mb-2 text-sm font-medium text-gray-900">Middle Name</label>
+                                                <input type="text" name="middle-name" id="middle-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Jane Doe' required />
+                                            </div>
+                                            <div className="relative">
+                                                <label htmlFor="last-name" className="block mb-2 text-sm font-medium text-gray-900">Last Name</label>
+                                                <input type="text" name="last-name" id="last-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Jane Doe' required />
+                                            </div>
+                                            <div className="relative">
+                                                <label htmlFor="sex" className="block mb-2 text-sm font-medium text-gray-900">Sex</label>
+                                                <select name="sex" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" required>
+                                                    <option value="">Select</option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                </select>
+                                            </div>
+                                            <div className="relative">
+                                                <label htmlFor="birthdate" className="block mb-2 text-sm font-medium text-gray-900">Birthdate</label>
+                                                <input type="date" name="birthdate" id="birthdate" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" required />
+                                            </div>
+                                            <div className="relative">
+                                                <label htmlFor="age" className="block mb-2 text-sm font-medium text-gray-900">Age</label>
+                                                <input type="text" name="age" id="age" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" readOnly />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Modal footer */}
+                                    <div className="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b">
+                                        <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Add</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
 
                     <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table className="w-full text-sm text-center text-gray-500">

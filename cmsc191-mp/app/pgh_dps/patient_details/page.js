@@ -155,8 +155,8 @@ export default function PatientDetails() {
                 <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg">
                     <h1 className="flex items-center text-5xl font-extrabold mb-4">{patientData.first_name+" "+patientData.middle_name+" "+patientData.last_name}</h1>
 
-                    <div className="flex grid md:grid-cols-2 text-justify mb-6">
-                        <div className="flex grid md:grid-cols-2 gap-3 w-max">
+                    <div className="grid md:grid-cols-2 text-justify mb-6">
+                        <div className="grid md:grid-cols-2 gap-3 w-max">
                             <div>
                                 <span className="text-2xl bg-gray-100 text-gray-800 border border-gray-500 rounded px-2.5 py-0.5 inline-flex items-center">
                                     <svg className="w-6 h-6 me-1 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
