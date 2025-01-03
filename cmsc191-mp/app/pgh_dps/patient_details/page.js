@@ -226,7 +226,7 @@ export default function PatientDetails() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline" data-modal-show="viewPatientFileModal" data-modal-target="viewPatientFileModal">View file</a>
-                                            <button className="mx-6 font-medium text-blue-600 hover:underline">Print</button>
+                                            {/* <button className="mx-6 font-medium text-blue-600 hover:underline">Print</button> */}
                                         </td>
                                     </tr>
                                 ))}
