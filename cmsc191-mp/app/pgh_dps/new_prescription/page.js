@@ -350,7 +350,7 @@ export default function NewPrescription() {
                                             ))}
 
                                             <div className="relative col-span-5">
-                                                <button onClick={()=>validate()}>Validate</button>
+                                                <button onClick={()=>validate()} className="block text-sm font-medium text-white bg-blue-400 rounded-lg p-2">Validate</button>
                                                 <br />
                                                 <strong>
                                                     {valid}
