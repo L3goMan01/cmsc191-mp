@@ -2,27 +2,36 @@
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { useState, useEffect } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import SearchableDropdown from '../../../components/SearchableDropdown'
 import { db } from '../../../firebase/firebase';
 import { collection, getDocs } from "firebase/firestore"
 
 export default function NewPrescription() {
-    const {register, handleSubmit, setValue, watch, getValues} = useForm();
+    const {register, handleSubmit, setValue, watch, getValues, control} = useForm({
+        defaultValues: {
+            meds: [{generic_name: "", brand_name: "", amount: "", instructions: ""}]
+        }
+    });
+    
     const [patients, setPatients] = useState([])
     const [medCount, setMedCount] = useState(1)
     const [patientName, setPatientName] = useState("")
-    const testnames = [{id: 1, name: "Timothy Tan"}, {id: 2, name: "Faustine Rivera"}]
-    const medItem = [
-        {
-            id: 1,
-            gen_value: "",
-            brn_value: "",
-            amt_value: "",
-            ins_value: ""
-        }
-    ]
-    const [medsArr, setMedsArr] = useState(medItem)
+    // const medItem = [
+    //     {
+    //         id: 1,
+    //         gen_value: "",
+    //         brn_value: "",
+    //         amt_value: "",
+    //         ins_value: ""
+    //     }
+    // ]
+    // const [medsArr, setMedsArr] = useState(medItem)
+    const {fields, append, remove} = useFieldArray({
+        control,
+        name: "meds"
+    });
+    const meds = watch("meds")
 
     useEffect(() => {
         const fetchData = async () => {
@@ -48,19 +57,21 @@ export default function NewPrescription() {
     function handleMedChange(setting) {
         if (setting == 0 && medCount > 1) {
             setMedCount(medCount-1)
-            medsArr.pop()
+            // medsArr.pop()
+            remove(-1)
         }
         if (setting == 1) {
             setMedCount(medCount+1)
-            var lastId = medsArr[medsArr.length-1].id + 1
-            var tempItem = {
-                id: lastId, 
-                gen_value: "",
-                brn_value: "",
-                amt_value: "",
-                ins_value: ""
-            }
-            setMedsArr([...medsArr, tempItem])
+            append({generic_name: "", brand_name: "", amount: 0, instructions: ""})
+            // var lastId = medsArr[medsArr.length-1].id + 1
+            // var tempItem = {
+            //     id: lastId, 
+            //     gen_value: "",
+            //     brn_value: "",
+            //     amt_value: "",
+            //     ins_value: ""
+            // }
+            // setMedsArr([...medsArr, tempItem])
         }
         // console.log(medsArr)
     }
@@ -74,6 +85,8 @@ export default function NewPrescription() {
 
     function submitButton() {
         console.log(getValues())
+        // console.log(meds)
+        // console.log(getValues("meds.generic_name"))
     }
 
     return (
@@ -107,7 +120,7 @@ export default function NewPrescription() {
                                     <path d="m17.418 3.623-.018-.008a6.713 6.713 0 0 0-2.4-.569V2h1a1 1 0 1 0 0-2h-2a1 1 0 0 0-1 1v2H9.89A6.977 6.977 0 0 1 12 8v5h-2V8A5 5 0 1 0 0 8v6a1 1 0 0 0 1 1h8v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h6a1 1 0 0 0 1-1V8a5 5 0 0 0-2.582-4.377ZM6 12H4a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z" />
                                 </svg>
                                 <span className="flex-1 ms-3 whitespace-nowrap">View prescriptions</span>
-                                <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">3</span>
+                                {/* <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">3</span> */}
                             </a>
                         </li>
 
@@ -180,30 +193,28 @@ export default function NewPrescription() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-5 gap-6" key={"change"}>
-                                            {medsArr.map((item, i) => {
-                                                return(
-                                                    <>
-                                                        <div className="relative" key={"gen-"+i}>
-                                                            <label key={"generic-name-label-"+i} htmlFor={"generic-name-"+i} className="block mb-2 text-sm font-medium text-gray-900">Generic Name</label>
-                                                            <input {...register("generic-name", {required: true})} key={"generic-name-"+i} type="text" name="generic-name" id={"generic-name-"+i} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Generika" required />
-                                                        </div>
-                                                        <div className="relative" key={"brn-"+i}>
-                                                            <label key={"brand-name-label-"+i} htmlFor={"brand-name-"+i} className="block mb-2 text-sm font-medium text-gray-900">Brand Name</label>
-                                                            <input {...register("brand-name", {required: true})} key={"brand-name-"+i} type="text" name="brand-name" id={"brand-name-"+i} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Bear Brand" required />
-                                                        </div>
-                                                        <div className="relative" key={"amt-"+i}>
-                                                            <label key={"amount-label-"+i} htmlFor={"amount-"+i} className="block mb-2 text-sm font-medium text-gray-900">Amount</label>
-                                                            <input {...register("amount", {required: true})} key={"amount-"+i} type="number" name="amount" id={"amount-"+i} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1" required />
-                                                        </div>
-                                                        <div className="relative col-span-2" key={"ins-"+i}>
-                                                            <label key={"instructions-label-"+i} htmlFor={"instructions-"+i} className="block mb-2 text-sm font-medium text-gray-900">Instructions</label>
-                                                            <input {...register("instructions", {required: true})} key={"instructions-"+i} type="text" name="instructions" id={"instructions-"+i} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
-                                                        </div>
-                                                    </>
-                                                )
-                                            })
-                                            }
+                                        <div className="grid grid-cols-5 gap-6">
+                                            {fields.map((item, index) => (
+                                                <>
+                                                    <div className="relative" key={"gen-"+item.id}>
+                                                        <label key={"generic-name-label-"+item.id} htmlFor={"generic-name-"+item.id} className="block mb-2 text-sm font-medium text-gray-900">Generic Name</label>
+                                                        <input {...register("meds.generic_name."+index, {required: true})} key={"generic-name-"+item.id} type="text" name="generic-name" id={"generic-name-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Generika" required />
+                                                    </div>
+                                                    <div className="relative" key={"brn-"+item.id}>
+                                                        <label key={"brand-name-label-"+item.id} htmlFor={"brand-name-"+item.id} className="block mb-2 text-sm font-medium text-gray-900">Brand Name</label>
+                                                        <input {...register(`meds.brand_name.${index}`, {required: true})} key={"brand-name-"+item.id} type="text" name="brand-name" id={"brand-name-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Bear Brand" required />
+                                                    </div>
+                                                    <div className="relative" key={"amt-"+item.id}>
+                                                        <label key={"amount-label-"+item.id} htmlFor={"amount-"+item.id} className="block mb-2 text-sm font-medium text-gray-900">Amount</label>
+                                                        <input {...register(`meds.amount.${index}`, {required: true})} key={"amount-"+item.id} type="number" name="amount" id={"amount-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1" required />
+                                                    </div>
+                                                    <div className="relative col-span-2" key={"ins-"+item.id}>
+                                                        <label key={"instructions-label-"+item.id} htmlFor={"instructions-"+index} className="block mb-2 text-sm font-medium text-gray-900">Instructions</label>
+                                                        <input {...register(`meds.instructions.${index}`, {required: true})} key={"instructions-"+item.id} type="text" name="instructions" id={"instructions-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
+                                                    </div>
+                                                </>
+                                            ))}
+                                            
                                             <div className="relative col-span-5">
                                                 <label htmlFor="notes" className="block mb-2 text-sm font-medium text-gray-900">Notes</label>
                                                 <textarea {...register("notes", {required: true})} name="notes" id="notes" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" wrap="hard" rows={5} cols={10} placeholder="Put any notes here..." />

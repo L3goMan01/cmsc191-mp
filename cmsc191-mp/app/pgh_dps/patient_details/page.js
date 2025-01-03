@@ -1,12 +1,64 @@
 "use client"
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { db } from '../../../firebase/firebase';
+import { collection, getDocs, getDoc, doc, query, where } from "firebase/firestore"
 
 export default function PatientDetails() {
+    const router = useRouter()
+    const pathName = usePathname()
+    const searchParams = useSearchParams()
+    const search = searchParams.toString().slice(0,-1)
+    const [patientData, setPatientData] = useState([])
+    const [age, setAge] = useState(0)
+    const [prescriptions, setPrescriptions] = useState([])
+
     useEffect(() => {
+        const fetchPatientData = async () => {
+            try {
+                const patientRef = doc(db, "patients", search)
+                const patientSnap = await getDoc(patientRef)
+                if (patientSnap.exists()) {
+                    setPatientData(patientSnap.data())
+                }
+                const today = new Date()
+                const birthday = new Date(patientSnap.data().birthday.toDate())
+                const calcAge = today.getFullYear() - birthday.getFullYear() - (today < new Date(today.getFullYear(), birthday.getMonth(), birthday.getDate()) ? 1 : 0)
+                setAge(calcAge)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        const fetchPrescriptions = async () => {
+            try {
+                const q = query(collection(db, "prescriptions"), where("patient_id", "==", parseInt(search)));
+
+                const querySnapshot = await getDocs(q);
+                const receivedData = querySnapshot.docs.map((doc) => {
+                    const data = doc.data()
+                    const date_created = data.date_created.toDate() ? new Date(data.date_created.toDate()) : null;
+                    const final_date = date_created.toDateString()
+                    return{
+                        date_created_string: final_date,
+                        ...data
+                    }
+                })
+                // console.log(receivedData)
+                setPrescriptions(receivedData)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchPatientData()
+        fetchPrescriptions()
         initFlowbite();
-    })
+    },[])
+
+    function clicked() {
+        console.log(prescriptions)
+    }
 
     return (
         <>
@@ -39,7 +91,7 @@ export default function PatientDetails() {
                                     <path d="m17.418 3.623-.018-.008a6.713 6.713 0 0 0-2.4-.569V2h1a1 1 0 1 0 0-2h-2a1 1 0 0 0-1 1v2H9.89A6.977 6.977 0 0 1 12 8v5h-2V8A5 5 0 1 0 0 8v6a1 1 0 0 0 1 1h8v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h6a1 1 0 0 0 1-1V8a5 5 0 0 0-2.582-4.377ZM6 12H4a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z" />
                                 </svg>
                                 <span className="flex-1 ms-3 whitespace-nowrap">View prescriptions</span>
-                                <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">3</span>
+                                {/* <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">3</span> */}
                             </a>
                         </li>
 
@@ -91,15 +143,14 @@ export default function PatientDetails() {
                                 <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
                                     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4" />
                                 </svg>
-                                <span className="ms-1 text-sm font-medium text-gray-500 md:ms-2">Patient: Timothy Tan</span>
+                                <span className="ms-1 text-sm font-medium text-gray-500 md:ms-2">Patient: {patientData.first_name+" "+patientData.middle_name+" "+patientData.last_name}</span>
                             </div>
                         </li>
                     </ol>
                 </nav>
 
                 <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg">
-
-                    <h1 className="flex items-center text-5xl font-extrabold mb-4">Timothy Tan</h1>
+                    <h1 className="flex items-center text-5xl font-extrabold mb-4">{patientData.first_name+" "+patientData.middle_name+" "+patientData.last_name}</h1>
 
                     <div className="flex grid md:grid-cols-2 text-justify mb-6">
                         <div className="flex grid md:grid-cols-2 gap-3 w-max">
@@ -109,7 +160,7 @@ export default function PatientDetails() {
                                         <path fillRule="evenodd" d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z" clipRule="evenodd" />
                                     </svg>
 
-                                    Sex: Male
+                                    Sex: {patientData.sex}
                                 </span>
                             </div>
 
@@ -119,7 +170,7 @@ export default function PatientDetails() {
                                         <path fillRule="evenodd" d="M5 5a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1 2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a2 2 0 0 1 2-2ZM3 19v-7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6.01-6a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm-10 4a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z" clipRule="evenodd" />
                                     </svg>
 
-                                    Age: 21
+                                    Age: {age}
                                 </span>
                             </div>
                         </div>
@@ -159,15 +210,26 @@ export default function PatientDetails() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="bg-white border-b">
+                                {prescriptions.map((item,index) => ( 
+                                    <tr key={index} className="bg-white border-b">
+                                        <td className="px-6 py-4">
+                                            {item.date_created_string}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline" data-modal-show="viewPatientFileModal" data-modal-target="viewPatientFileModal">View file</a>
+                                            <button className="mx-6 font-medium text-blue-600 hover:underline">Print</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {/* <tr className="bg-white border-b">
                                     <td className="px-6 py-4">
                                         12/12/2024
                                     </td>
                                     <td className="px-6 py-4">
                                         <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline" data-modal-show="viewPatientFileModal" data-modal-target="viewPatientFileModal">View file</a>
-                                        <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline">Print</a>
+                                        <button className="mx-6 font-medium text-blue-600 hover:underline">Print</button>
                                     </td>
-                                </tr>
+                                </tr> */}
                             </tbody>
                         </table>
 
@@ -193,15 +255,15 @@ export default function PatientDetails() {
                                         <div className="grid grid-cols-3 gap-6">
                                             <div className="relative">
                                                 <label htmlFor="first-name" className="block mb-2 text-sm font-medium text-gray-900">First Name</label>
-                                                <input type="text" name="first-name" id="first-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Jane" required />
+                                                <input type="text" name="first-name" id="first-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder={patientData.first_name} required />
                                             </div>
                                             <div className="relative">
                                                 <label htmlFor="middle-name" className="block mb-2 text-sm font-medium text-gray-900">Middle Name</label>
-                                                <input type="text" name="middle-name" id="middle-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Smith" required />
+                                                <input type="text" name="middle-name" id="middle-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder={patientData.middle_name} required />
                                             </div>
                                             <div className="relative">
                                                 <label htmlFor="last-name" className="block mb-2 text-sm font-medium text-gray-900">Last Name</label>
-                                                <input type="text" name="last-name" id="last-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Doe" required />
+                                                <input type="text" name="last-name" id="last-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder={patientData.last_name} required />
                                             </div>
                                             <div className="relative">
                                                 <label htmlFor="sex" className="block mb-2 text-sm font-medium text-gray-900">Sex</label>

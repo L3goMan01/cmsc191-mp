@@ -1,12 +1,41 @@
 "use client"
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { db } from '../../../firebase/firebase';
+import { collection, getDocs, getDoc, doc, query, where } from "firebase/firestore"
+import Link from 'next/link';
 
-export default function Dashboard() {
+export default function ViewPatients() {
+    const [patientNames, setPatientNames] = useState([]);
+    const [prescriptionCount, setPrescriptionCounts] = useState([])
+
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const namesSnapshot = await getDocs(collection(db, "patients"))
+                const receivedNames = namesSnapshot.docs.map((doc) => {
+                    const fields = doc.data();
+                    const full_name = fields.first_name.concat(" ", fields.middle_name, " ", fields.last_name);
+                    const coll = collection(db, "prescriptions");
+                    const q = query(coll, where("patient_id", "==", "CA"));
+                    return {
+                        id: doc.id,
+                        name: full_name
+                    }
+                });
+                setPatientNames(receivedNames)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchData();
         initFlowbite();
-    })
+    },[])
+
+    function clicked() {
+        console.log(patientNames)
+    }
 
     return (
         <>
@@ -39,7 +68,7 @@ export default function Dashboard() {
                                     <path d="m17.418 3.623-.018-.008a6.713 6.713 0 0 0-2.4-.569V2h1a1 1 0 1 0 0-2h-2a1 1 0 0 0-1 1v2H9.89A6.977 6.977 0 0 1 12 8v5h-2V8A5 5 0 1 0 0 8v6a1 1 0 0 0 1 1h8v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h6a1 1 0 0 0 1-1V8a5 5 0 0 0-2.582-4.377ZM6 12H4a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z" />
                                 </svg>
                                 <span className="flex-1 ms-3 whitespace-nowrap">View prescriptions</span>
-                                <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">3</span>
+                                {/* <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">3</span> */}
                             </a>
                         </li>
 
@@ -92,11 +121,6 @@ export default function Dashboard() {
                                         Patient Name
                                     </th>
                                     <th scope="col" className="px-6 py-3">
-                                        <div className="flex items-center justify-center">
-                                            Number of Files
-                                        </div>
-                                    </th>
-                                    <th scope="col" className="px-6 py-3">
                                         Actions
                                     </th>
                                     {/* <th scope="col" className="px-6 py-3">
@@ -105,7 +129,19 @@ export default function Dashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="bg-white border-b">
+                                {patientNames.map((item, index) => (
+                                    <tr key={index} className="bg-white border-b">
+                                        <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                            {item.name}
+                                        </th>
+                                        <td className="px-6 py-4">
+                                            <Link href={{pathname: '/pgh_dps/patient_details', search: item.id}}>
+                                                <div className="mx-6 font-medium text-blue-600 hover:underline">View patient</div>
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {/* <tr className="bg-white border-b">
                                     <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                         TAN, Timothy
                                     </th>
@@ -113,7 +149,9 @@ export default function Dashboard() {
                                         4
                                     </td>
                                     <td className="px-6 py-4">
-                                        <a href="/pgh_dps/patient_details" type="button" className="mx-6 font-medium text-blue-600 hover:underline">View patient</a>
+                                        <Link href={{pathname: '/pgh_dps/patient_details', search: "1"}}>
+                                            <div className="mx-6 font-medium text-blue-600 hover:underline">View patient</div>
+                                        </Link>
                                     </td>
                                 </tr>
                                 <tr className="bg-white border-b">
@@ -137,7 +175,7 @@ export default function Dashboard() {
                                     <td className="px-6 py-4">
                                         <a href="/pgh_dps/patient_details" type="button" className="mx-6 font-medium text-blue-600 hover:underline">View patient</a>
                                     </td>
-                                </tr>
+                                </tr> */}
                             </tbody>
                         </table>
 
