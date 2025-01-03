@@ -55,16 +55,20 @@ export default function ViewPatients() {
         console.log((parseInt(patientNames[patientNames.length-1].id)+1).toString())
     }
 
-    function handleSexChange(val) {
-        setSex(val)
-        setValue("sex", val)
-        console.log(val)
-    }
+    // function handleSexChange(val) {
+    //     setSex(val)
+    //     setValue("sex", val)
+    //     console.log(val)
+    // }
 
     function handleDateChange(val) {
         const myTimestamp = Timestamp.fromDate(new Date(val));
         setValue("birthday", myTimestamp)
         console.log(myTimestamp)
+    }
+
+    function testFields() {
+        console.log(getValues())
     }
 
     const onSubmit = async () => {
@@ -167,7 +171,7 @@ export default function ViewPatients() {
                     <div id="addPatientModal" tabIndex={-1} aria-hidden="true" className="fixed top-0 left-0 right-0 z-50 items-center justify-center hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
                             <div className="relative w-full max-w-2xl max-h-full">
                                 {/* Modal content */}
-                                <form className="relative bg-white rounded-lg shadow">
+                                <form onSubmit={handleSubmit(onSubmit)} className="relative bg-white rounded-lg shadow">
                                     {/* Modal header */}
                                     <div className="flex items-start justify-between p-4 border-b rounded-t">
                                         <h3 className="text-xl font-semibold text-gray-900">
@@ -185,38 +189,35 @@ export default function ViewPatients() {
                                     <div className="p-6 space-y-6">
                                         <div className="grid grid-cols-3 gap-6">
                                             <div className="relative">
-                                                <label htmlFor="first-name" className="block mb-2 text-sm font-medium text-gray-900">First Name</label>
-                                                <input type="text" name="first-name" id="first-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Jane Doe' required />
+                                                <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900">First Name</label>
+                                                <input {...register("first_name", {required:true})} type="text" name="first_name" id="first_name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Jane'></input>
                                             </div>
                                             <div className="relative">
-                                                <label htmlFor="middle-name" className="block mb-2 text-sm font-medium text-gray-900">Middle Name</label>
-                                                <input type="text" name="middle-name" id="middle-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Jane Doe' required />
+                                                <label htmlFor="middle_name" className="block mb-2 text-sm font-medium text-gray-900">Middle Name</label>
+                                                <input {...register("middle_name", {required:true})} type="text" name="middle_name" id="middle_name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Something'></input>
                                             </div>
                                             <div className="relative">
-                                                <label htmlFor="last-name" className="block mb-2 text-sm font-medium text-gray-900">Last Name</label>
-                                                <input type="text" name="last-name" id="last-name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Jane Doe' required />
+                                                <label htmlFor="last_name" className="block mb-2 text-sm font-medium text-gray-900">Last Name</label>
+                                                <input {...register("last_name", {required:true})} type="text" name="last_name" id="last_name" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder='Doe'></input>
                                             </div>
                                             <div className="relative">
                                                 <label htmlFor="sex" className="block mb-2 text-sm font-medium text-gray-900">Sex</label>
-                                                <select name="sex" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" required>
+                                                <select {...register("sex")} name="sex" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5">
                                                     <option value="">Select</option>
-                                                    <option value="male">Male</option>
-                                                    <option value="female">Female</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
                                                 </select>
                                             </div>
                                             <div className="relative">
                                                 <label htmlFor="birthdate" className="block mb-2 text-sm font-medium text-gray-900">Birthdate</label>
-                                                <input type="date" name="birthdate" id="birthdate" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" required />
-                                            </div>
-                                            <div className="relative">
-                                                <label htmlFor="age" className="block mb-2 text-sm font-medium text-gray-900">Age</label>
-                                                <input type="text" name="age" id="age" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" readOnly />
+                                                <input {...register("birthday_name", {required:true})} type="date" name="birthdate" id="birthdate" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" onChange={(date)=>handleDateChange(date.target.value)}></input>
                                             </div>
                                         </div>
                                     </div>
+                                    
                                     {/* Modal footer */}
                                     <div className="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b">
-                                        <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Add</button>
+                                        <button onClick={()=>onSubmit()} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Add patient</button>
                                     </div>
                                 </form>
                             </div>
@@ -256,12 +257,11 @@ export default function ViewPatients() {
                     </div>
                 </div>
 
-                <div>
+                {/* <div>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <input {...register("first_name", {required:true})} placeholder='first-name'></input>
                         <input {...register("middle_name", {required:true})} placeholder='middle-name'></input>
                         <input {...register("last_name", {required:true})} placeholder='last-name'></input>
-                        {/* <SearchableDropdown {...register("sex", {required:true})} options={options} label="sex" id="id" selectedVal={sex} handleChange={(val) => handleSexChange(val)}/> */}
                         <select {...register("sex")} name="sex" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" required>
                             <option value="">Select</option>
                             <option value="Male">Male</option>
@@ -270,7 +270,7 @@ export default function ViewPatients() {
                         <input {...register("birthday_name", {required:true})} type='date' placeholder='birthday' onChange={(date)=>handleDateChange(date.target.value)}></input>
                         <button onClick={()=>onSubmit()}>Try</button>
                     </form>
-                </div>
+                </div> */}
             </div>
         </>
     );

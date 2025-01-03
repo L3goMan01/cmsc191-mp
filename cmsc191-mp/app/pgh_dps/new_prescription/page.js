@@ -16,12 +16,19 @@ export default function NewPrescription() {
     });
     
     const [patients, setPatients] = useState([])
+    const [prescriptions, setPrescriptions] = useState([])
+    const [valid, setValid] = useState("To validate...")
+    const [pass, setPass] = useState(false)
+
     const [medCount, setMedCount] = useState(1)
+
     const [patientName, setPatientName] = useState("")
     const [genericNames, setGenericNames] = useState([])
     const [brandNames, setBrandNames] = useState([])
     const [amounts, setAmounts] = useState([])
     const [instructions, setInstructions] = useState([])
+    const [valid_dates, setValidDates] = useState([])
+
     const {fields, append, remove, prepend, insert, update} = useFieldArray({
         control,
         name: "meds"
@@ -45,7 +52,26 @@ export default function NewPrescription() {
                 console.log(error)
             }
         }
+        const fetchPrescriptions = async () => {
+            try {
+                const dataSnapshot = await getDocs(collection(db, "prescriptions"))
+                const receivedData = dataSnapshot.docs.map((doc) => {
+                    const fields = doc.data();
+                    return {
+                        patient_id: fields.patient_id,
+                        brand_name: fields.brand_name,
+                        generic_name: fields.generic_name,
+                        valid_thru: fields.valid_thru
+                    }
+                });
+                setPrescriptions(receivedData)
+                console.log(receivedData)
+            } catch (error) {
+                console.log(error)
+            }
+        }
         fetchData();
+        // fetchPrescriptions();
     }, [])
 
     useEffect(() => {
@@ -89,14 +115,19 @@ export default function NewPrescription() {
             brandNames[index] = val
         }
         if (field == "amount") {
-            amounts[index] = parseInt(val)
+            amounts[index] = val
         }
         if (field == "instructions") {
             instructions[index] = val
         }
+        if (field == "valid") {
+            valid_dates[index] = Timestamp.fromDate(new Date(val))
+        }
     }
 
     const onSubmit = async () => {
+        console.log(pass)
+        if (pass) {
             const date_created = Timestamp.fromDate(new Date());
             const docData = {
                 file_name: getValues("file_name"),
@@ -105,15 +136,87 @@ export default function NewPrescription() {
                 brand_name: brandNames,
                 amount: amounts,
                 instructions: instructions,
+                valid_thru: valid_dates,
                 notes: getValues("notes"),
                 patient_id: getValues("patient_id")
             }
             const newId = getValues("file_name").replace(/\s/g, "").toLowerCase()
             await setDoc(doc(db, "prescriptions", newId), docData)
+        }
     }
 
-    function submitButton() {
-        console.log(getValues("patient_id"))
+    const validate = async (id) => {
+        const date_created = Timestamp.fromDate(new Date());
+        const q = query(collection(db, "prescriptions"), where("patient_id", "==", getValues("patient_id")));
+        const querySnapshot = await getDocs(q)
+        const receivedData = querySnapshot.docs.map((doc) => {
+            const data = doc.data()
+            return{
+                patient_id: data.patient_id,
+                brand_name: data.brand_name,
+                generic_name: data.generic_name,
+                valid_thru: data.valid_thru
+            }
+        })
+        console.log(receivedData)
+        if (receivedData.length > 0) {
+            isValid(receivedData, genericNames, brandNames)
+        }
+    }
+
+    const isValid = (prescriptions, currGen, currBrand) => {
+        // console.log("entered")
+        const today = Timestamp.fromDate(new Date())
+        for (let i = 0; i < currGen.length; i++) {
+            // console.log("i")
+            for (let j = 0; j < prescriptions.length; j++) {
+                // console.log("j")
+                for (let k = 0; k < prescriptions[j].brand_name.length; k++) {
+                    // console.log("k")
+                    // console.log(currGen[i])
+                    // console.log(prescriptions[j].brand_name[k])
+                    // console.log(currBrand[i])
+                    // console.log(prescriptions[j].generic_name[k])
+                    if (currBrand[i]==prescriptions[j].brand_name[k] && currGen[i]==prescriptions[j].generic_name[k]) {
+                        // console.log(today)
+                        // console.log(prescriptions[j])
+                        // console.log(prescriptions[j].valid_thru[k])
+                        if (today <= prescriptions[j].valid_thru[k]) {
+                            // console.log("found")
+                            setValid("Already issued " + currGen[i] + " " + currBrand[i])
+                            setPass(false)
+                            break
+                        }
+                        else {
+                            setValid("Clear")
+                            setPass(true)
+                        }
+                    }
+                    else {
+                        setValid("Clear")
+                        setPass(true)
+                    }
+                }
+            }
+        }
+        console.log("Finished")
+        console.log(pass)
+    }
+
+    function testButton() {
+        const date_created = Timestamp.fromDate(new Date());
+        const docData = {
+            file_name: getValues("file_name"),
+            date_created: date_created,
+            generic_name: genericNames,
+            brand_name: brandNames,
+            amount: amounts,
+            instructions: instructions,
+            valid_thru: valid_dates,
+            notes: getValues("notes"),
+            patient_id: getValues("patient_id")
+        }
+        console.log(docData)
     }
 
     return (
@@ -235,12 +338,24 @@ export default function NewPrescription() {
                                                         <label key={"amount-label-"+item.id} htmlFor={"amount-"+item.id} className="block mb-2 text-sm font-medium text-gray-900">Amount</label>
                                                         <input {...register(`meds.amount.${index}`, {required: true})} onChange={(input) => handleFieldChange("amount", index, input.target.value)} key={"amount-"+item.id} type="text" name="amount" id={"amount-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="1 pill" required />
                                                     </div>
-                                                    <div className="relative col-span-2" key={"ins-"+item.id}>
+                                                    <div className="relative" key={"ins-"+item.id}>
                                                         <label key={"instructions-label-"+item.id} htmlFor={"instructions-"+index} className="block mb-2 text-sm font-medium text-gray-900">Instructions</label>
                                                         <input {...register(`meds.instructions.${index}`, {required: true})} onChange={(input) => handleFieldChange("instructions", index, input.target.value)} key={"instructions-"+item.id} type="text" name="instructions" id={"instructions-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" placeholder="Once a day" required />
                                                     </div>
+                                                    <div className="relative" key={"val-"+item.id}>
+                                                        <label key={"valid-thru-label-"+item.id} htmlFor={"valid-thru-"+index} className="block mb-2 text-sm font-medium text-gray-900">Valid thru</label>
+                                                        <input {...register(`meds.valid_thru.${index}`, {required: true})} onChange={(input) => handleFieldChange("valid", index, input.target.value)} key={"valid-thru-"+item.id} type="date" name="valid-thru" id={"valid-thru-"+item.id} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5" required />
+                                                    </div>
                                                 </>
                                             ))}
+
+                                            <div className="relative col-span-5">
+                                                <button onClick={()=>validate()}>Validate</button>
+                                                <br />
+                                                <strong>
+                                                    {valid}
+                                                </strong>
+                                            </div>
                                             
                                             <div className="relative col-span-5">
                                                 <label htmlFor="notes" className="block mb-2 text-sm font-medium text-gray-900">Notes</label>
@@ -256,7 +371,8 @@ export default function NewPrescription() {
                                     
                                     <div className="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b">
                                         {/* <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Create</button> */}
-                                        <button onClick={()=>submitButton()} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Create</button>
+                                        {pass && <button onClick={()=>onSubmit()} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Create</button>}
+                                        {/* <button onClick={()=>onSubmit()} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Create</button> */}
                                     </div>
                                 </form>
                             </div>
