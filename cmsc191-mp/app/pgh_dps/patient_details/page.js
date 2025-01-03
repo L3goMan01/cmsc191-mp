@@ -197,6 +197,9 @@ export default function PatientDetails() {
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                 <tr>
                                     <th scope="col" className="px-6 py-3">
+                                        File Name
+                                    </th>
+                                    <th scope="col" className="px-6 py-3">
                                         <div className="flex items-center justify-center">
                                             Date Created
                                             <a href="#"><svg className="w-3 h-3 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
@@ -215,6 +218,9 @@ export default function PatientDetails() {
                             <tbody>
                                 {prescriptions.map((item,index) => ( 
                                     <tr key={index} className="bg-white border-b">
+                                        <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                            {item.file_name}
+                                        </th>
                                         <td className="px-6 py-4">
                                             {item.date_created_string}
                                         </td>

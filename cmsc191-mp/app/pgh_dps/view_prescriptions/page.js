@@ -3,7 +3,7 @@ import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { useState, useEffect } from 'react';
 import { db } from '../../../firebase/firebase';
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, getDoc, doc, query, where, orderBy } from "firebase/firestore"
 import Link from 'next/link';
 import ViewFileModal from '../../../components/ViewFileModal'
 
@@ -15,7 +15,8 @@ export default function ViewPrescriptions() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const dataSnapshot = await getDocs(collection(db, "prescriptions"))
+                const q = query(collection(db, "prescriptions"), orderBy("date_created", "desc"))
+                const dataSnapshot = await getDocs(q)
                 const receivedData = dataSnapshot.docs.map((doc) => {
                     const fields = doc.data();
                     // const file_name = fields.file_name;
@@ -240,8 +241,8 @@ export default function ViewPrescriptions() {
                                             <Link href={{pathname: '/pgh_dps/patient_details', search: item.id}}>
                                                 <div className="mx-6 font-medium text-blue-600 hover:underline">View patient</div>
                                             </Link>
-                                            {/* <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline" data-modal-target="viewFileModal" data-modal-show="viewFileModal">View file</a> */}
-                                            <button onClick={()=>{setShowFile(true); setFileContent(item)}} className="mx-6 font-medium text-blue-600 hover:underline">View File</button>
+                                            <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline" data-modal-target="viewFileModal" data-modal-show="viewFileModal">View file</a>
+                                            {/* <button onClick={()=>{setShowFile(true); setFileContent(item)}} className="mx-6 font-medium text-blue-600 hover:underline">View File</button> */}
                                             {/* <a href="#" type="button" className="mx-6 font-medium text-blue-600 hover:underline">Print</a> */}
                                         </td>
                                     </tr>
